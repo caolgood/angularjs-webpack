@@ -6,6 +6,7 @@ var autoprefixer = require('autoprefixer');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
+const path = require('path');
 
 /**
  * Env
@@ -45,7 +46,7 @@ module.exports = function makeWebpackConfig() {
 
     // Output path from the view of the page
     // Uses webpack-dev-server in development
-    publicPath: isProd ? '/' : 'http://0.0.0.0:8080/',
+    publicPath: isProd ? '/' : 'http://localhost:3000/',
 
     // Filename for entry points
     // Only adds hash in build mode
@@ -88,6 +89,15 @@ module.exports = function makeWebpackConfig() {
       test: /\.js$/,
       loader: 'babel-loader',
       exclude: /node_modules/
+    }, {
+      test: /\.js$/,
+      include: [/core/],
+      exclude: [/legacy-app/],
+      loader: 'imports-loader?wpw=legacyroot'
+    }, {
+      test: /legacy-app\.js$/,
+      include: [/core/],
+      loader: 'exports-loader?wpw'
     }, {
       // CSS LOADER
       // Reference: https://github.com/webpack/css-loader
@@ -146,6 +156,12 @@ module.exports = function makeWebpackConfig() {
     })
   }
 
+  config.resolve = {
+    alias: {
+      'legacyroot': path.resolve(__dirname, 'src/core/legacy-app.js')
+    }
+  };
+
   /**
    * PostCSS
    * Reference: https://github.com/postcss/autoprefixer-core
@@ -184,7 +200,7 @@ module.exports = function makeWebpackConfig() {
       // Extract css files
       // Disabled when in test mode or not in build mode
       new ExtractTextPlugin({filename: 'css/[name].css', disable: !isProd, allChunks: true})
-    )
+    );
   }
 
   // Add build specific plugins
@@ -192,11 +208,7 @@ module.exports = function makeWebpackConfig() {
     config.plugins.push(
       // Reference: http://webpack.github.io/docs/list-of-plugins.html#noerrorsplugin
       // Only emit files when there are no errors
-      new webpack.NoErrorsPlugin(),
-
-      // Reference: http://webpack.github.io/docs/list-of-plugins.html#dedupeplugin
-      // Dedupe modules in the output
-      new webpack.optimize.DedupePlugin(),
+      new webpack.NoEmitOnErrorsPlugin(),
 
       // Reference: http://webpack.github.io/docs/list-of-plugins.html#uglifyjsplugin
       // Minify all javascript, switch loaders to minimizing mode
@@ -207,7 +219,7 @@ module.exports = function makeWebpackConfig() {
       new CopyWebpackPlugin([{
         from: __dirname + '/src/public'
       }])
-    )
+    );
   }
 
   /**
@@ -218,7 +230,8 @@ module.exports = function makeWebpackConfig() {
   config.devServer = {
     contentBase: './src/public',
     stats: 'minimal',
-    host: '0.0.0.0'
+    host: '0.0.0.0',
+    port: 3000
   };
 
   return config;

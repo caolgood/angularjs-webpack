@@ -1,6 +1,13 @@
-import angular from 'angular';
+const cache = {};
+function importAll (r) {
+  r.keys().forEach(key => cache[key] = r(key));
+}
+importAll(require.context("../core", true, /\.js$/));
 
+import angular from 'angular';
 import '../style/app.css';
+import wpw from 'legacyroot';
+
 
 let app = () => {
   return {
@@ -13,6 +20,7 @@ let app = () => {
 class AppCtrl {
   constructor() {
     this.url = 'https://github.com/preboot/angular-webpack';
+    console.log(wpw);
   }
 }
 
